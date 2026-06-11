@@ -208,6 +208,72 @@ Phase: red | Layer: entity | Track: Logic
 
 ---
 
+## REFACTOR To-Do
+
+> **전제:** `python -m pytest tests/ -v` **GREEN** 유지  
+> **Change Budget:** 파일≤3 · 클래스≤1 · 메서드≤3
+
+### `/refactor-smell` 결과
+
+> **Scope:** `src/` · `tests/` · **4 passed** (2026-06-11)
+
+| 우선순위 | 스멜 | 위치(파일:함수) | 근거 | Change Budget 내 리팩터 후보 |
+|----------|------|-----------------|------|------------------------------|
+| ~~**P0**~~ | ~~Duplicated Code (SSOT 상수 분산)~~ | ~~`convert_meter_to_feet.py` · `convert_meter_to_yard.py`~~ | ~~`METER_TO_FEET`/`METER_TO_YARD` 파일별 정의~~ | ✅ `src/entity/constants.py` SSOT 추출 완료 |
+| ~~**P1**~~ | ~~Switch Statements (OCP)~~ | ~~`conversion_service.py:to_meters`~~ | ~~unit별 `if` 3분기~~ | ✅ `_UNIT_TO_METERS_DIVISOR` dict lookup 완료 |
+| **P1** | Duplicated Code + Magic Number | `UnitConverter.py:main` (L4–32) | `InputHandler`·`conversion_service`와 동일 검증·변환; `3.28084`/`1.09361` 리터럴 4회 · pytest 미커버 | `InputHandler` + `convert_all` 위임 (파일 1 · 메서드 1) — Scope 외 레거시 |
+| **P1** | Duplicated Code (G1 픽스처) | `validation_gui.py` (L29–31) ↔ `conftest.py:meters_g1` ↔ `result_display.py:format_g1_verification` | `2.5`·`8.2021`·`2.734025` 삼중 정의 | `constants.py` 또는 tests 공유 픽스처로 단일화 (파일 ≤3) |
+| **P2** | Duplicated Call | `input_handler.py:validate` (L11–19) | `float(value_str)` 2회 호출 | 1회 파싱 후 변수 재사용 (파일 1 · 1줄) |
+| **P2** | Long Method / Large Class | `validation_gui.py:ValidationWindow` | 클래스 ~195줄; `_on_run_g1` 검증 인라인 · pytest 미커버 | 검증 로직 `result_display` 헬퍼 이동 (파일 2 · 메서드 ≤2) |
+| **P2** | Inconsistent Test Style | `test_d_loc_01.py` ↔ `test_d_loc_02.py` | D-LOC-01 golden · D-LOC-02 `pytest.approx` | 스타일 통일 (파일 ≤2) |
+
+### `/refactor-safe` 후보 (Change Budget 내)
+
+| # | 후보 | 대상 스멜 | 범위 | pytest |
+|---|------|-----------|------|--------|
+| ~~**1**~~ | ~~`constants.py` SSOT 추출~~ | ~~P0 Duplicated Code~~ | ~~파일 3~~ | ✅ **4 passed** |
+| ~~**2**~~ | ~~`to_meters` dict lookup~~ | ~~P1 Switch Statements (OCP)~~ | ~~`conversion_service.py` · 파일 1~~ | ✅ **4 passed** |
+| **3** | G1 상수 단일화 | P1 Duplicated Code (G1) | `constants.py` 또는 `conftest` 연동 · `validation_gui.py`/`result_display.py` · 파일 ≤3 | GREEN 유지 (GUI 미커버) |
+
+### 다음 단계
+
+```
+/refactor-safe      # P1 후보 3 — G1 상수 단일화
+```
+
+**권장 순서:** ~~후보 1~~ ✅ → ~~후보 2~~ ✅ → 후보 3 → Scope 외 `UnitConverter.py` boundary 연동
+
+### REFACTOR 프롬프트 예시
+
+```
+/refactor-smell
+Phase: refactor | Scope: src/ tests/ | Track: Logic+UI
+전제: python -m pytest tests/ -v GREEN
+Change Budget: 파일≤3 · 클래스≤1 · 메서드≤3
+금지: src/ tests/ 코드 수정 (스멜 진단만)
+```
+
+```
+/refactor-safe
+Phase: refactor | Scope: src/boundary | Track: Logic+UI
+후보: 3 (P1) — G1 상수 단일화
+전제: pytest GREEN 유지 · Change Budget 준수 (파일≤3)
+```
+
+---
+
+## 후속 (예정)
+
+| 항목 | Track | 설명 |
+|------|-------|------|
+| REFACTOR 후보 2·3 | B — Logic / A — UI | `to_meters` OCP · G1 상수 단일화 |
+| `UnitConverter.py` `main()` 리팩터 | boundary | if-else·매직넘버 → `InputHandler` + `convert_all` |
+| validation_gui pytest | A — UI | GUI 경로 회귀 테스트 (선택) |
+| JSON/CSV 출력 | boundary | 추가 요구사항 |
+| 동적 단위 등록 (cubit) | entity | OCP 검증 시나리오 |
+
+---
+
 ## 프로젝트 구조 (목표)
 
 ```

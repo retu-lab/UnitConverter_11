@@ -1,4 +1,4 @@
-METER_TO_FEET = 3.28084
+from src.entity.constants import METER_TO_FEET
 
 
 def convert_meter_to_feet(meters: float) -> float:
