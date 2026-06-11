@@ -1,3 +1,5 @@
+from src.entity.constants import G1_EXPECTED_FEET, METERS_G1
+
 ERROR_MESSAGES = {
     "E001": "형식 오류 — unit:value 형식으로 입력하세요 (예: meter:2.5)",
     "E002": "숫자 오류 — 값은 숫자여야 합니다",
@@ -22,12 +24,14 @@ def format_conversion_lines(
     return lines
 
 
-def format_g1_verification(actual_feet: float, expected_feet: float = 8.2021) -> str:
+def format_g1_verification(
+    actual_feet: float, expected_feet: float = G1_EXPECTED_FEET
+) -> str:
     delta = abs(actual_feet - expected_feet)
     passed = delta < 1e-4
     status = "PASS" if passed else "FAIL"
     return (
-        f"D-LOC-01 G1 검증 — Given: 2.5 meter\n"
+        f"D-LOC-01 G1 검증 — Given: {METERS_G1:g} meter\n"
         f"  Expected feet: {expected_feet:.4f}\n"
         f"  Actual feet:   {actual_feet:.4f}\n"
         f"  Status: {status}"

@@ -1,35 +1,23 @@
+from src.boundary.conversion_service import convert_all
+from src.boundary.input_handler import InputHandler
+from src.boundary.result_display import format_conversion_lines, format_error
+from src.entity.constants import G1_INPUT
+
+
 def main():
-    input_str = input("Insert value for converting (ex: meter:2.5): ")
+    input_str = input(f"Insert value for converting (ex: {G1_INPUT}): ")
+    validation = InputHandler().validate(input_str)
 
-    if ':' not in input_str:
-        print("Invalid format. Use unit:value (ex: meter:2.5)")
+    error_code = validation.get("error_code")
+    if error_code:
+        print(format_error(error_code, validation.get("unit")))
         return
 
-    unit, value_str = input_str.split(':', 1)
-
-    try:
-        value = float(value_str)
-    except ValueError:
-        print(f"Invalid number: {value_str}")
-        return
-
-    if unit == "meter":
-        meter_value = value
-    elif unit == "feet":
-        meter_value = value / 3.28084
-    elif unit == "yard":
-        meter_value = value / 1.09361
-    else:
-        print(f"Unknown unit: {unit}")
-        return
-
-    in_meters = meter_value
-    in_feet = meter_value * 3.28084
-    in_yards = meter_value * 1.09361
-
-    print(f"{value} {unit} = {in_meters} meter")
-    print(f"{value} {unit} = {in_feet} feet")
-    print(f"{value} {unit} = {in_yards} yard")
+    unit = validation["unit"]
+    value = validation["value"]
+    results = convert_all(unit, value)
+    for line in format_conversion_lines(unit, value, results):
+        print(line)
 
 
 if __name__ == "__main__":

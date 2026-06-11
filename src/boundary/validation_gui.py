@@ -25,11 +25,14 @@ from src.boundary.result_display import (
     format_error,
     format_g1_verification,
 )
+from src.entity.constants import (
+    G1_EXPECTED_FEET,
+    G1_EXPECTED_YARD,
+    G1_INPUT,
+    METERS_G1,
+)
 
-G1_INPUT = "meter:2.5"
-G1_EXPECTED_FEET = 8.2021
-G1_EXPECTED_YARD = 2.734025
-EXAMPLE_INPUTS = ("meter:2.5", "yard:12.5", "feet:8.2021")
+EXAMPLE_INPUTS = (G1_INPUT, "yard:12.5", "feet:8.2021")
 
 
 class ValidationWindow(QMainWindow):
@@ -71,7 +74,7 @@ class ValidationWindow(QMainWindow):
 
         row = QHBoxLayout()
         self._input_field = QLineEdit()
-        self._input_field.setPlaceholderText("meter:2.5")
+        self._input_field.setPlaceholderText(G1_INPUT)
         self._input_field.returnPressed.connect(self._on_convert)
 
         convert_btn = QPushButton("변환")
@@ -112,11 +115,11 @@ class ValidationWindow(QMainWindow):
 
         grid = QGridLayout()
         grid.addWidget(QLabel("D-LOC-01 (G1)"), 0, 0)
-        grid.addWidget(QLabel("입력: 2.5 meter"), 0, 1)
+        grid.addWidget(QLabel(f"입력: {METERS_G1:g} meter"), 0, 1)
         grid.addWidget(QLabel(f"기대 feet: {G1_EXPECTED_FEET}"), 1, 0)
         grid.addWidget(QLabel(f"기대 yard: {G1_EXPECTED_YARD}"), 1, 1)
 
-        g1_btn = QPushButton("G1 실행 (meter:2.5)")
+        g1_btn = QPushButton(f"G1 실행 ({G1_INPUT})")
         g1_btn.clicked.connect(self._on_run_g1)
         grid.addWidget(g1_btn, 2, 0, 1, 2)
 
@@ -176,7 +179,7 @@ class ValidationWindow(QMainWindow):
         self._set_input(G1_INPUT)
         self._on_convert()
 
-        results = convert_all("meter", 2.5)
+        results = convert_all("meter", METERS_G1)
         feet_ok = abs(results["feet"] - G1_EXPECTED_FEET) < 1e-4
         yard_ok = abs(results["yard"] - G1_EXPECTED_YARD) < 1e-4
 
