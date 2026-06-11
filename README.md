@@ -246,6 +246,7 @@ main → spec → red → green → refactoring
 
 | 문서 | 설명 |
 |------|------|
+| [docs/PRD.md](docs/PRD.md) | Mom Test 기반 제품 요구사항 (SSOT) |
 | [Report/01.MomTest-Report.md](Report/01.MomTest-Report.md) | Mom Test 워크북·인터뷰 |
 | [Report/03.MomTest-Report.md](Report/03.MomTest-Report.md) | R-G-I-O·성공 기준 |
 | [Report/04.CursorAI-Report.md](Report/04.CursorAI-Report.md) | Cursor 8계층·Test Loop |
