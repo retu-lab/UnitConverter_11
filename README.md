@@ -208,6 +208,72 @@ Phase: red | Layer: entity | Track: Logic
 
 ---
 
+## REFACTOR To-Do
+
+> **전제:** `python -m pytest tests/ -v` **GREEN** 유지  
+> **Change Budget:** 파일≤3 · 클래스≤1 · 메서드≤3
+
+### `/refactor-smell` 결과
+
+> **Scope:** `src/` · `tests/` · **4 passed** (2026-06-11)
+
+| 우선순위 | 스멜 | 위치(파일:함수) | 근거 | Change Budget 내 리팩터 후보 |
+|----------|------|-----------------|------|------------------------------|
+| ~~**P0**~~ | ~~Duplicated Code (SSOT 상수 분산)~~ | ~~`convert_meter_to_feet.py` · `convert_meter_to_yard.py`~~ | ~~`METER_TO_FEET`/`METER_TO_YARD` 파일별 정의~~ | ✅ `src/entity/constants.py` SSOT 추출 완료 |
+| ~~**P1**~~ | ~~Switch Statements (OCP)~~ | ~~`conversion_service.py:to_meters`~~ | ~~unit별 `if` 3분기~~ | ✅ `_UNIT_TO_METERS_DIVISOR` dict lookup 완료 |
+| ~~**P1**~~ | ~~Duplicated Code + Magic Number~~ | ~~`UnitConverter.py:main`~~ | ~~if-else·매직넘버 중복~~ | ✅ `InputHandler` + `convert_all` + `format_conversion_lines` 위임 |
+| ~~**P1**~~ | ~~Duplicated Code (G1 픽스처)~~ | ~~`validation_gui.py` ↔ `conftest.py` ↔ `result_display.py`~~ | ~~G1 값 삼중 정의~~ | ✅ `constants.py` `METERS_G1`·`G1_*` SSOT 완료 |
+| **P2** | Duplicated Call | `input_handler.py:validate` (L11–19) | `float(value_str)` 2회 호출 | 1회 파싱 후 변수 재사용 (파일 1 · 1줄) |
+| **P2** | Long Method / Large Class | `validation_gui.py:ValidationWindow` | 클래스 ~195줄; `_on_run_g1` 검증 인라인 · pytest 미커버 | 검증 로직 `result_display` 헬퍼 이동 (파일 2 · 메서드 ≤2) |
+| **P2** | Inconsistent Test Style | `test_d_loc_01.py` ↔ `test_d_loc_02.py` | D-LOC-01 golden · D-LOC-02 `pytest.approx` | 스타일 통일 (파일 ≤2) |
+
+### `/refactor-safe` 후보 (Change Budget 내)
+
+| # | 후보 | 대상 스멜 | 범위 | pytest |
+|---|------|-----------|------|--------|
+| ~~**1**~~ | ~~`constants.py` SSOT 추출~~ | ~~P0 Duplicated Code~~ | ~~파일 3~~ | ✅ **4 passed** |
+| ~~**2**~~ | ~~`to_meters` dict lookup~~ | ~~P1 Switch Statements (OCP)~~ | ~~`conversion_service.py` · 파일 1~~ | ✅ **4 passed** |
+| ~~**3**~~ | ~~G1 상수 단일화~~ | ~~P1 Duplicated Code (G1)~~ | ~~`constants.py` + conftest + boundary 3파일~~ | ✅ **4 passed** |
+
+### 다음 단계
+
+```
+/refactor-smell      # 잔여 P2 스멜 재점검 (input_handler · test style 등)
+```
+
+**권장 순서:** ~~후보 1~3~~ ✅ → ~~`UnitConverter.py`~~ ✅ → P2 순차 처리
+
+### REFACTOR 프롬프트 예시
+
+```
+/refactor-smell
+Phase: refactor | Scope: src/ tests/ | Track: Logic+UI
+전제: python -m pytest tests/ -v GREEN
+Change Budget: 파일≤3 · 클래스≤1 · 메서드≤3
+금지: src/ tests/ 코드 수정 (스멜 진단만)
+```
+
+```
+/refactor-safe
+Phase: refactor | Scope: src/boundary | Track: Logic+UI
+후보: 3 (P1) — G1 상수 단일화
+전제: pytest GREEN 유지 · Change Budget 준수 (파일≤3)
+```
+
+---
+
+## 후속 (예정)
+
+| 항목 | Track | 설명 |
+|------|-------|------|
+| ~~REFACTOR 후보 1~3~~ | B — Logic / A — UI | ✅ constants SSOT · to_meters OCP · G1 단일화 |
+| ~~`UnitConverter.py` `main()` 리팩터~~ | boundary | ✅ `InputHandler` + `convert_all` 위임 완료 |
+| validation_gui pytest | A — UI | GUI 경로 회귀 테스트 (선택) |
+| JSON/CSV 출력 | boundary | 추가 요구사항 |
+| 동적 단위 등록 (cubit) | entity | OCP 검증 시나리오 |
+
+---
+
 ## 프로젝트 구조 (목표)
 
 ```
@@ -246,6 +312,7 @@ main → spec → red → green → refactoring
 
 | 문서 | 설명 |
 |------|------|
+| [docs/PRD.md](docs/PRD.md) | Mom Test 기반 제품 요구사항 (SSOT) |
 | [Report/01.MomTest-Report.md](Report/01.MomTest-Report.md) | Mom Test 워크북·인터뷰 |
 | [Report/03.MomTest-Report.md](Report/03.MomTest-Report.md) | R-G-I-O·성공 기준 |
 | [Report/04.CursorAI-Report.md](Report/04.CursorAI-Report.md) | Cursor 8계층·Test Loop |
